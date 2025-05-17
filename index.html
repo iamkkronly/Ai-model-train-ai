@@ -3,20 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <title>DeepThink 3D Portfolio</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-        body { margin:0; background:#111; color:#fff; font-family:sans-serif; text-align:center; }
-        .scene { width:300px; height:300px; margin:auto; perspective:1000px; margin-top:30px; }
+        body { margin:0; background:#111; color:#fff; font-family:sans-serif; text-align:center; overflow-x:hidden; }
+        .scene { width:80vw; max-width:300px; height:80vw; max-height:300px; margin:auto; perspective:1000px; margin-top:20px; }
         .cube { width:100%; height:100%; position:relative; transform-style:preserve-3d; animation:spin 10s infinite linear; }
-        .face { position:absolute; width:300px; height:300px; display:flex; align-items:center; justify-content:center; background:rgba(255,255,255,0.1); border:2px solid cyan; box-shadow:0 0 20px cyan; backdrop-filter:blur(5px); }
-        .front{transform:rotateY(0deg) translateZ(150px);} .back{transform:rotateY(180deg) translateZ(150px);}
-        .right{transform:rotateY(90deg) translateZ(150px);} .left{transform:rotateY(-90deg) translateZ(150px);}
-        .top{transform:rotateX(90deg) translateZ(150px);} .bottom{transform:rotateX(-90deg) translateZ(150px);}
+        .face { position:absolute; width:100%; height:100%; display:flex; align-items:center; justify-content:center; background:rgba(255,255,255,0.1); border:1px solid cyan; box-shadow:0 0 10px cyan; backdrop-filter:blur(3px); font-size:4vw; }
+        .front{transform:rotateY(0deg) translateZ(40vw);} .back{transform:rotateY(180deg) translateZ(40vw);}
+        .right{transform:rotateY(90deg) translateZ(40vw);} .left{transform:rotateY(-90deg) translateZ(40vw);}
+        .top{transform:rotateX(90deg) translateZ(40vw);} .bottom{transform:rotateX(-90deg) translateZ(40vw);}
         @keyframes spin { from{transform:rotateX(0) rotateY(0);} to{transform:rotateX(360deg) rotateY(360deg);} }
-        input,button{margin:5px;padding:10px;width:300px;border-radius:5px;border:none;}
+
+        input,button{margin:5px;padding:12px;width:80vw;max-width:350px;border-radius:5px;border:none;font-size:4vw;}
         button{background:cyan;color:black;font-weight:bold;cursor:pointer;}
-        .results{margin-top:20px;max-width:800px;margin:auto;text-align:left;}
+        
+        .results{margin-top:20px;padding:0 10px;max-width:1000px;margin:auto;text-align:left;}
         .step { margin:20px 0; padding:10px; border:1px solid cyan; border-radius:10px; background:#222; }
-        .loader { color:cyan; animation:blink 1s infinite; }
+        .loader { color:cyan; animation:blink 1s infinite; font-size:5vw; text-align:center; }
         @keyframes blink { 0%{opacity:1;} 50%{opacity:0.3;} 100%{opacity:1;} }
     </style>
 </head>
@@ -24,15 +27,15 @@
 
     <div class="scene">
         <div class="cube">
-            <div class="face front">About Me-- Kaustav Ray</div><div class="face back">Projects</div>
-            <div class="face right">Skills</div><div class="face left">Kaustav Ray</div>
-            <div class="face top">Contact</div><div class="face bottom">Kaustav Ray</div>
+            <div class="face front">About Me Kaustav Ray</div><div class="face back">Projects</div>
+            <div class="face right">Kaustav Ray</div><div class="face left">Experience</div>
+            <div class="face top">Kaustav Ray</div><div class="face bottom">Socials</div>
         </div>
     </div>
 
-    <h2>DeepThink Search Agency by Kaustav</h2>
+    <h2 style="font-size:6vw;">DeepThink Search by Kaustav AI</h2>
     <input type="text" id="query" placeholder="Enter your query...">
-    <button onclick="deepThink()">Start DeepThink by Kaustav</button>
+    <button onclick="deepThink()">Start DeepThink</button>
     <div class="results" id="results"></div>
 
     <script>
@@ -60,25 +63,30 @@
         async function deepThink() {
             const query = document.getElementById("query").value;
             const resultsDiv = document.getElementById("results");
-            resultsDiv.innerHTML = `<div class="loader">Searching Web...</div>`;
+            resultsDiv.innerHTML = `<div class="loader">Searching Web.......</div>`;
+            scrollToBottom();
 
             // Step 1: Google Search Results
             const googleResults = await googleSearch(query);
             resultsDiv.innerHTML += `<div class="step"><h3>Web Search Results:</h3><ul>${googleResults.map(r => `<li>${r}</li>`).join('')}</ul></div>`;
+            scrollToBottom();
 
             // Step 2: Gemini Summaries Step by Step
             let mixedContent = "";
-            resultsDiv.innerHTML += `<div class="loader">Generating Summaries with Kaustav AI...</div>`;
+            resultsDiv.innerHTML += `<div class="loader">Generating Summaries with Kaustav AI.........</div>`;
+            scrollToBottom();
             for (let i = 0; i < googleResults.length; i += 3) {
                 const chunk = googleResults.slice(i, i + 3);
                 const prompt = `Summarize and expand deeply on:\n${chunk.join("\n")}`;
                 const aiOutput = await geminiGenerate(prompt);
                 mixedContent += aiOutput + "\n\n";
-                resultsDiv.innerHTML += `<div class="step"><h3>Kaustav AI Summary ${Math.floor(i/3)+1}:</h3><p>${aiOutput}</p></div>`;
+                resultsDiv.innerHTML += `<div class="step"><h3>Gemini Summary ${Math.floor(i/3)+1}:</h3><p>${aiOutput}</p></div>`;
+                scrollToBottom();
             }
 
             // Step 3: Expanding to 20k Words
-            resultsDiv.innerHTML += `<div class="loader">DeepThinking... Expanding to 20,000 words</div>`;
+            resultsDiv.innerHTML += `<div class="loader">DeepThinking......</div>`;
+            scrollToBottom();
             let wordCount = mixedContent.split(/\s+/).length;
             while (wordCount < 20000) {
                 const expandPrompt = `Take this content and expand it with more details, analysis, examples:\n${mixedContent}`;
@@ -86,12 +94,20 @@
                 mixedContent += aiExpansion + "\n\n";
                 wordCount = mixedContent.split(/\s+/).length;
                 resultsDiv.innerHTML += `<div class="step"><h3>DeepThink Expansion (Current words: ${wordCount}):</h3><p>${aiExpansion}</p></div>`;
-                if (wordCount > 25000) break; // Safety limit
+                scrollToBottom();
+                if (wordCount > 35000) break; // Safety limit
             }
 
             // Step 4: Final Result Typing Effect
             resultsDiv.innerHTML += `<div class="step" id="finalResult"><h3>Final Mixed Result (~${wordCount} words):</h3><p id="finalText"></p></div>`;
+            scrollToBottom();
             typeEffect("finalText", mixedContent);
+        }
+
+        function scrollToBottom() {
+            setTimeout(() => {
+                window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+            }, 300);
         }
 
         function typeEffect(elementId, text, speed = 5) {
@@ -102,6 +118,7 @@
                     target.innerHTML += text.charAt(i);
                     i++;
                     if (i % 1000 === 0) console.log(`Typed ${i} chars`);
+                    if (i % 500 === 0) scrollToBottom();
                     setTimeout(typeChar, speed);
                 }
             }
