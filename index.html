@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Kaustav AI Chatbot</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f4f4f4; margin: 0; padding: 0; display: flex; justify-content: center; align-items: center; height: 100vh; }
+    .chat-container { width: 100%; max-width: 500px; background: #fff; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.2); padding: 20px; }
+    .messages { height: 400px; overflow-y: auto; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 5px; padding: 10px; background: #fafafa; }
+    .message { margin: 10px 0; }
+    .user { text-align: right; color: #007bff; }
+    .bot { text-align: left; color: #333; }
+    input { width: calc(100% - 60px); padding: 10px; border: 1px solid #ccc; border-radius: 5px; }
+    button { padding: 10px 20px; margin-left: 10px; border: none; background: #007bff; color: #fff; border-radius: 5px; cursor: pointer; }
+    button:hover { background: #0056b3; }
+  </style>
+</head>
+<body>
+
+<div class="chat-container">
+  <div class="messages" id="messages"></div>
+  <div>
+    <input type="text" id="userInput" placeholder="Type your message...">
+    <button onclick="sendMessage()">Send</button>
+  </div>
+</div>
+
+<script>
+  let database = [];
+
+  // Load database
+  fetch('users.json')
+    .then(response => response.json())
+    .then(data => database = data)
+    .catch(err => console.error('Failed to load users.json', err));
+
+  function sendMessage() {
+    const input = document.getElementById('userInput');
+    const message = input.value.trim();
+    if (!message) return;
+
+    addMessage('user', message);
+    respond(message.toLowerCase());
+    input.value = '';
+  }
+
+  function respond(userMsg) {
+    const found = database.find(item => userMsg.includes(item.question));
+    const reply = found ? found.answer : getDefaultReply();
+    setTimeout(() => addMessage('bot', reply), 500);
+  }
+
+  function addMessage(sender, text) {
+    const messagesDiv = document.getElementById('messages');
+    const msgDiv = document.createElement('div');
+    msgDiv.className = 'message ' + sender;
+    msgDiv.innerText = text;
+    messagesDiv.appendChild(msgDiv);
+    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+  }
+
+  function getDefaultReply() {
+    const def = database.find(item => item.question === 'default');
+    return def ? def.answer : "I don't understand. Please ask something else.";
+  }
+</script>
+
+</body>
+</html>
