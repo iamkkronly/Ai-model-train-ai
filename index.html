@@ -1,69 +1,112 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Kaustav AI Chatbot</title>
-  <style>
-    body { font-family: Arial, sans-serif; background: #f4f4f4; margin: 0; padding: 0; display: flex; justify-content: center; align-items: center; height: 100vh; }
-    .chat-container { width: 100%; max-width: 500px; background: #fff; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.2); padding: 20px; }
-    .messages { height: 400px; overflow-y: auto; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 5px; padding: 10px; background: #fafafa; }
-    .message { margin: 10px 0; }
-    .user { text-align: right; color: #007bff; }
-    .bot { text-align: left; color: #333; }
-    input { width: calc(100% - 60px); padding: 10px; border: 1px solid #ccc; border-radius: 5px; }
-    button { padding: 10px 20px; margin-left: 10px; border: none; background: #007bff; color: #fff; border-radius: 5px; cursor: pointer; }
-    button:hover { background: #0056b3; }
-  </style>
+    <meta charset="UTF-8">
+    <title>DeepThink 3D Portfolio</title>
+    <style>
+        body { margin:0; background:#111; color:#fff; font-family:sans-serif; text-align:center; }
+        .scene { width:300px; height:300px; margin:auto; perspective:1000px; margin-top:30px; }
+        .cube { width:100%; height:100%; position:relative; transform-style:preserve-3d; animation:spin 10s infinite linear; }
+        .face { position:absolute; width:300px; height:300px; display:flex; align-items:center; justify-content:center; background:rgba(255,255,255,0.1); border:2px solid cyan; box-shadow:0 0 20px cyan; backdrop-filter:blur(5px); }
+        .front{transform:rotateY(0deg) translateZ(150px);} .back{transform:rotateY(180deg) translateZ(150px);}
+        .right{transform:rotateY(90deg) translateZ(150px);} .left{transform:rotateY(-90deg) translateZ(150px);}
+        .top{transform:rotateX(90deg) translateZ(150px);} .bottom{transform:rotateX(-90deg) translateZ(150px);}
+        @keyframes spin { from{transform:rotateX(0) rotateY(0);} to{transform:rotateX(360deg) rotateY(360deg);} }
+        input,button{margin:5px;padding:10px;width:300px;border-radius:5px;border:none;}
+        button{background:cyan;color:black;font-weight:bold;cursor:pointer;}
+        .results{margin-top:20px;max-width:800px;margin:auto;text-align:left;}
+        .step { margin:20px 0; padding:10px; border:1px solid cyan; border-radius:10px; background:#222; }
+        .loader { color:cyan; animation:blink 1s infinite; }
+        @keyframes blink { 0%{opacity:1;} 50%{opacity:0.3;} 100%{opacity:1;} }
+    </style>
 </head>
 <body>
 
-<div class="chat-container">
-  <div class="messages" id="messages"></div>
-  <div>
-    <input type="text" id="userInput" placeholder="Type your message...">
-    <button onclick="sendMessage()">Send</button>
-  </div>
-</div>
+    <div class="scene">
+        <div class="cube">
+            <div class="face front">About Me-- Kaustav Ray</div><div class="face back">Projects</div>
+            <div class="face right">Skills</div><div class="face left">Kaustav Ray</div>
+            <div class="face top">Contact</div><div class="face bottom">Kaustav Ray</div>
+        </div>
+    </div>
 
-<script>
-  let database = [];
+    <h2>DeepThink Search Agency by Kaustav</h2>
+    <input type="text" id="query" placeholder="Enter your query...">
+    <button onclick="deepThink()">Start DeepThink by Kaustav</button>
+    <div class="results" id="results"></div>
 
-  // Load database
-  fetch('users.json')
-    .then(response => response.json())
-    .then(data => database = data)
-    .catch(err => console.error('Failed to load users.json', err));
+    <script>
+        const GOOGLE_API_KEY = "AIzaSyCrV8RJ-kUj-LCxbqfB1QMa6RsPQ4bM80Y";
+        const SEARCH_ENGINE_ID = "735baae6a3cee4779";
+        const GEMINI_API_KEY = "AIzaSyAUS24UaK5kfxrfuUCue5zmyX3n3yD7Yek";
 
-  function sendMessage() {
-    const input = document.getElementById('userInput');
-    const message = input.value.trim();
-    if (!message) return;
+        async function googleSearch(query) {
+            const url = `https://www.googleapis.com/customsearch/v1?key=${GOOGLE_API_KEY}&cx=${SEARCH_ENGINE_ID}&q=${encodeURIComponent(query)}`;
+            const res = await fetch(url);
+            const data = await res.json();
+            return data.items ? data.items.map(i => `${i.title}: ${i.snippet}`) : [];
+        }
 
-    addMessage('user', message);
-    respond(message.toLowerCase());
-    input.value = '';
-  }
+        async function geminiGenerate(prompt) {
+            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+            });
+            const data = await res.json();
+            return data.candidates ? data.candidates[0].content.parts[0].text : '';
+        }
 
-  function respond(userMsg) {
-    const found = database.find(item => userMsg.includes(item.question));
-    const reply = found ? found.answer : getDefaultReply();
-    setTimeout(() => addMessage('bot', reply), 500);
-  }
+        async function deepThink() {
+            const query = document.getElementById("query").value;
+            const resultsDiv = document.getElementById("results");
+            resultsDiv.innerHTML = `<div class="loader">Searching Web...</div>`;
 
-  function addMessage(sender, text) {
-    const messagesDiv = document.getElementById('messages');
-    const msgDiv = document.createElement('div');
-    msgDiv.className = 'message ' + sender;
-    msgDiv.innerText = text;
-    messagesDiv.appendChild(msgDiv);
-    messagesDiv.scrollTop = messagesDiv.scrollHeight;
-  }
+            // Step 1: Google Search Results
+            const googleResults = await googleSearch(query);
+            resultsDiv.innerHTML += `<div class="step"><h3>Web Search Results:</h3><ul>${googleResults.map(r => `<li>${r}</li>`).join('')}</ul></div>`;
 
-  function getDefaultReply() {
-    const def = database.find(item => item.question === 'default');
-    return def ? def.answer : "I don't understand. Please ask something else.";
-  }
-</script>
+            // Step 2: Gemini Summaries Step by Step
+            let mixedContent = "";
+            resultsDiv.innerHTML += `<div class="loader">Generating Summaries with Kaustav AI...</div>`;
+            for (let i = 0; i < googleResults.length; i += 3) {
+                const chunk = googleResults.slice(i, i + 3);
+                const prompt = `Summarize and expand deeply on:\n${chunk.join("\n")}`;
+                const aiOutput = await geminiGenerate(prompt);
+                mixedContent += aiOutput + "\n\n";
+                resultsDiv.innerHTML += `<div class="step"><h3>Kaustav AI Summary ${Math.floor(i/3)+1}:</h3><p>${aiOutput}</p></div>`;
+            }
 
+            // Step 3: Expanding to 20k Words
+            resultsDiv.innerHTML += `<div class="loader">DeepThinking... Expanding to 20,000 words</div>`;
+            let wordCount = mixedContent.split(/\s+/).length;
+            while (wordCount < 20000) {
+                const expandPrompt = `Take this content and expand it with more details, analysis, examples:\n${mixedContent}`;
+                const aiExpansion = await geminiGenerate(expandPrompt);
+                mixedContent += aiExpansion + "\n\n";
+                wordCount = mixedContent.split(/\s+/).length;
+                resultsDiv.innerHTML += `<div class="step"><h3>DeepThink Expansion (Current words: ${wordCount}):</h3><p>${aiExpansion}</p></div>`;
+                if (wordCount > 25000) break; // Safety limit
+            }
+
+            // Step 4: Final Result Typing Effect
+            resultsDiv.innerHTML += `<div class="step" id="finalResult"><h3>Final Mixed Result (~${wordCount} words):</h3><p id="finalText"></p></div>`;
+            typeEffect("finalText", mixedContent);
+        }
+
+        function typeEffect(elementId, text, speed = 5) {
+            let i = 0;
+            const target = document.getElementById(elementId);
+            function typeChar() {
+                if (i < text.length) {
+                    target.innerHTML += text.charAt(i);
+                    i++;
+                    if (i % 1000 === 0) console.log(`Typed ${i} chars`);
+                    setTimeout(typeChar, speed);
+                }
+            }
+            typeChar();
+        }
+    </script>
 </body>
 </html>
